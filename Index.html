@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCart - Gerenciamento de Carrinhos de Emergência</title>
+    <!-- Link para o Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos personalizados para o SmartCart */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F7F9FA; /* Nova cor de fundo */
+            color: #1F2937; /* Nova cor de texto primária */
+        }
+        .header-bg {
+            background-color: #1A535C; /* Nova cor primária */
+        }
+        .sidebar-bg {
+            background-color: #ffffff; /* Fundo branco para a barra lateral */
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Cantos arredondados */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #1A535C; /* Nova cor primária */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #144047; /* Tom mais escuro da cor primária para hover */
+        }
+        .text-primary-custom { /* Usado onde a cor primária é para texto */
+            color: #1A535C; /* Nova cor primária */
+        }
+        .text-success {
+            color: #4ECDC4; /* Nova cor de destaque (accent) para conformidade */
+        }
+        .text-warning {
+            color: #FF6B6B; /* Nova cor secundária para itens a vencer */
+        }
+        .text-danger {
+            color: #FF6B6B; /* Nova cor secundária para itens faltando/vencidos */
+        }
+        /* Estilos para o formulário modal */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; /* Posição fixa na tela */
+            z-index: 1000; /* Acima de outros elementos */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Habilita scroll se o conteúdo for muito grande */
+            background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 80%; /* Largura do modal */
+            max-width: 600px; /* Largura máxima */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            color: #4B5563; /* Nova cor de texto secundária */
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #1F2937; /* Nova cor de texto primária */
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Estilos para a barra lateral colapsável */
+        .sidebar {
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111; /* Mantido escuro para contraste */
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #4B5563; /* Nova cor de texto secundária */
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1; /* Mantido para bom contraste com o fundo escuro */
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #1A535C; /* Nova cor primária */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .openbtn:hover {
+            background-color: #144047; /* Tom mais escuro da cor primária para hover */
+        }
+
+        #main-content-area {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0; /* Começa sem margem */
+        }
+
+        /* Responsividade para a barra lateral */
+        @media screen and (max-height: 450px) {
+            .sidebar {padding-top: 15px;}
+            .sidebar a {font-size: 18px;}
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="card p-8 w-full max-w-md text-center">
+            <h1 class="text-4xl font-bold mb-6 text-primary-custom">SmartCart</h1>
+            <p class="text-lg text-text-secondary">Gerenciamento Inteligente de Carrinhos de Emergência</p>
+            <form id="login-form">
+                <input type="email" placeholder="Usuário" value="jose.silva@smartcart.com" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="password" placeholder="Senha" value="senha123" class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <button type="submit" class="w-full btn-primary">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal da Aplicação (Escondido inicialmente) -->
+    <div id="main-app" class="flex-1 hidden">
+        <!-- Barra de Tarefas (Navbar) -->
+        <nav class="header-bg p-4 shadow-md flex justify-between items-center">
+            <div class="flex items-center">
+                <!-- Ícone do sanduíche para abrir a barra lateral -->
+                <button class="openbtn mr-4" onclick="openNav()">&#9776;</button>
+                <div class="text-white text-2xl font-bold cursor-pointer" onclick="showDashboard()">SmartCart</div>
+            </div>
+            <div class="flex items-center">
+                <!-- Ícone de sino para alertas -->
+                <button id="alerts-btn-icon" class="text-white hover:text-gray-200 transition duration-300 text-2xl mr-4">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <!-- Ícone de pessoa para configurações do perfil/conta -->
+                <button id="profile-settings-btn-icon" class="text-white hover:text-gray-200 transition duration-300 text-2xl">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Barra Lateral Colapsável -->
+        <div id="mySidebar" class="sidebar">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+            <a href="#" id="sidebar-dashboard-btn" onclick="showDashboard(); closeNav();">Dashboard</a>
+            <a href="#" id="sidebar-standard-form-btn" onclick="showPage('standard-form-page'); closeNav();">Formulário Padrão</a>
+            <a href="#" id="sidebar-cart-status-btn" onclick="showPage('cart-status-page'); closeNav();">Status dos Carrinhos</a>
+            <a href="#" id="sidebar-logout-btn" onclick="showLogoutConfirmation(); closeNav();">Sair</a>
+        </div>
+
+        <!-- Área de Conteúdo Principal -->
+        <div id="main-content-area" class="flex-1 p-6">
+            <!-- Dashboard Principal -->
+            <div id="dashboard-page" class="page-content">
+                <h2 class="text-3xl font-semibold mb-6 text-text-primary">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Card de Carrinhos em Conformidade -->
+                    <div class="card p-6 cursor-pointer hover:shadow-lg transition-shadow duration-300" onclick="showCartDetails('conformity')">
+                        <h3 class="text-xl font-medium mb-2 text-text-secondary">Carrinhos em Conformidade</h3>
+                        <p class="text-5xl font-bold text-success">4</p>
+                    </div>
+                    <!-- Card de Carrinhos com Itens Faltando -->
+                    <div class="card p-6 cursor-pointer hover:shadow-lg transition-shadow duration-300" onclick="showCartDetails('missing')">
+                        <h3 class="text-xl font-medium mb-2 text-text-secondary">Itens Faltando</h3>
+                        <p class="text-5xl font-bold text-danger">2</p>
+                    </div>
+                    <!-- Card de Carrinhos com Itens Vencidos -->
+                    <div class="card p-6 cursor-pointer hover:shadow-lg transition-shadow duration-300" onclick="showCartDetails('expired')">
+                        <h3 class="text-xl font-medium mb-2 text-text-secondary">Itens Vencidos</h3>
+                        <p class="text-5xl font-bold text-danger">1</p>
+                    </div>
+                    <!-- Card de Carrinhos com Itens a Vencer -->
+                    <div class="card p-6 cursor-pointer hover:shadow-lg transition-shadow duration-300" onclick="showCartDetails('expiring')">
+                        <h3 class="text-xl font-medium mb-2 text-text-secondary">Itens a Vencer</h3>
+                        <p class="text-5xl font-bold text-warning">3</p>
+                    </div>
+                </div>
+
+                <!-- Nova Seção: Atividade Recente/Log de Eventos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="card p-6">
+                        <h3 class="text-2xl font-semibold mb-4 text-text-primary">Atividade Recente</h3>
+                        <ul class="space-y-3 text-text-secondary">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-success mr-2"></i>
+                                <span><strong class="text-text-primary">Carrinho 007</strong> - Verificado em Observação (11:00)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-danger mr-2"></i>
+                                <span><strong class="text-text-primary">Alerta:</strong> 'Dipirona' faltando no <strong class="text-text-primary">Carrinho 004</strong> (10:45)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-calendar-times text-danger mr-2"></i>
+                                <span><strong class="text-text-primary">Alerta:</strong> 'Morfina' vencida no <strong class="text-text-primary">Carrinho 008</strong> (10:30)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-hourglass-half text-warning mr-2"></i>
+                                <span><strong class="text-text-primary">Alerta:</strong> 'Soro Fisiológico' a vencer no <strong class="text-text-primary">Carrinho 001</strong> (10:15)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Alertas Críticos e Ações Pendentes (no Dashboard) -->
+                    <div class="card p-6">
+                        <h3 class="text-2xl font-semibold mb-4 text-text-primary">Alertas Críticos e Ações Pendentes</h3>
+                        <div id="dashboard-alerts-content">
+                            <!-- Alerts will be populated here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nova Seção: Visão Geral do Inventário Total e Itens Próximos do Vencimento -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-2xl font-semibold mb-4 text-text-primary">Visão Geral do Inventário Total</h3>
+                        <div class="space-y-3 text-text-secondary">
+                            <p>Total de Medicações Registradas: <strong class="text-text-primary">2500 unidades</strong></p>
+                            <p>Total de Materiais Registrados: <strong class="text-text-primary">1200 unidades</strong></p>
+                            <p>Carrinhos Monitorados: <strong class="text-text-primary">10</strong></p>
+                            <p>Média de Conformidade: <strong class="text-success">92%</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Nova Seção: Itens Próximos do Vencimento (Destaque) -->
+                    <div class="card p-6">
+                        <h3 class="text-2xl font-semibold mb-4 text-text-primary">Itens Próximos do Vencimento</h3>
+                        <ul class="space-y-3 text-text-secondary">
+                            <li class="flex justify-between items-center">
+                                <span><strong class="text-text-primary">Soro Fisiológico</strong> - Carrinho 001</span>
+                                <span class="text-warning">Vence em: 15/09/2025</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span><strong class="text-text-primary">Vitamina K</strong> - Carrinho 010</span>
+                                <span class="text-warning">Vence em: 25/08/2025</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span><strong class="text-text-primary">Cefalosporina</strong> - Carrinho 009</span>
+                                <span class="text-warning">Vence em: 01/09/2025</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Página de Detalhes do Carrinho (oculta por padrão) -->
+            <div id="cart-details-page" class="page-content hidden">
+                <button class="btn-primary mb-4" onclick="showDashboard()">Voltar ao Dashboard</button>
+                <h2 id="cart-details-title" class="text-3xl font-semibold mb-6 text-text-primary">Detalhes do Carrinho</h2>
+                <div id="cart-details-content" class="card p-6">
+                    <!-- Conteúdo dinâmico será carregado aqui -->
+                </div>
+            </div>
+
+            <!-- Página de Configurações do Perfil/Conta (oculta por padrão) -->
+            <div id="profile-settings-page" class="page-content hidden">
+                <h2 class="text-3xl font-semibold mb-6 text-text-primary">Configurações do Perfil/Conta</h2>
+                <div class="card p-6">
+                    <p class="text-text-secondary">Conteúdo das configurações do perfil e da conta.</p>
+                    <form class="mt-4 space-y-4">
+                        <div>
+                            <label for="username" class="block text-text-secondary text-sm font-bold mb-2">Nome de Usuário:</label>
+                            <input type="text" id="username" class="shadow appearance-none border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:shadow-outline" value="José Silva">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-text-secondary text-sm font-bold mb-2">Email:</label>
+                            <input type="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:shadow-outline" value="jose.silva@smartcart.com">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-text-secondary text-sm font-bold mb-2">Alterar Senha:</label>
+                            <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:shadow-outline" placeholder="Nova Senha">
+                        </div>
+                        <button type="submit" class="btn-primary">Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Página de Formulário Padrão (oculta por padrão) -->
+            <div id="standard-form-page" class="page-content hidden">
+                <h2 class="text-3xl font-semibold mb-6 text-text-primary">Formulário Padrão</h2>
+                <div class="card p-6">
+                    <p class="text-text-secondary">Este é um formulário de exemplo para entrada de dados.</p>
+                    <form id="item-form" class="mt-4 space-y-4">
+                        <div>
+                            <label for="item-name" class="block text-text-secondary text-sm font-bold mb-2">Nome do Item:</label>
+                            <input type="text" id="item-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: Soro Fisiológico">
+                        </div>
+                        <div>
+                            <label for="item-quantity" class="block text-text-secondary text-sm font-bold mb-2">Quantidade:</label>
+                            <input type="number" id="item-quantity" class="shadow appearance-none border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: 10">
+                        </div>
+                        <button type="submit" class="btn-primary">Adicionar Item</button>
+                    </form>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-4 text-text-primary">Itens Incluídos:</h3>
+                    <div id="included-items-list" class="card p-4 bg-gray-50">
+                        <ul class="list-disc pl-5 space-y-2">
+                            <!-- Itens adicionados dinamicamente aqui -->
+                            <li>Soro Fisiológico - Quantidade: 50</li>
+                            <li>Luvas Cirúrgicas (Par) - Quantidade: 100</li>
+                            <li>Máscara N95 - Quantidade: 20</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página de Status dos Carrinhos (oculta por padrão) -->
+            <div id="cart-status-page" class="page-content hidden">
+                <h2 class="text-3xl font-semibold mb-6 text-text-primary">Status Geral dos Carrinhos</h2>
+                <div class="card p-6">
+                    <ul class="space-y-4" id="general-cart-status-list">
+                        <!-- Dynamic content will be loaded here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Nova Página de Detalhes do Carrinho Individual (oculta por padrão) -->
+            <div id="cart-individual-page" class="page-content hidden">
+                <button class="btn-primary mb-4" onclick="showPage('cart-status-page')">Voltar ao Status dos Carrinhos</button>
+                <h2 id="individual-cart-title" class="text-3xl font-semibold mb-6 text-text-primary">Detalhes do Carrinho</h2>
+                <div id="individual-cart-content" class="card p-6">
+                    <!-- Conteúdo dinâmico do carrinho individual será carregado aqui -->
+                </div>
+
+                <!-- Seção de Relatórios -->
+                <div class="card p-6 mt-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-text-primary">Relatórios Gerados</h3>
+                    <button class="btn-primary mb-4" id="generate-report-btn">Gerar Novo Relatório</button>
+                    <div id="reports-list" class="space-y-3">
+                        <!-- Relatórios gerados dinamicamente aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nova Página de Alertas Críticos (oculta por padrão) -->
+            <div id="alerts-page" class="page-content hidden">
+                <button class="btn-primary mb-4" onclick="showDashboard()">Voltar ao Dashboard</button>
+                <h2 class="text-3xl font-semibold mb-6 text-text-primary">Alertas Críticos e Ações Pendentes</h2>
+                <div id="alerts-page-content" class="card p-6">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal para mensagens ou confirmações (substitui alert/confirm) -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title" class="text-2xl font-semibold mb-4 text-text-primary"></h3>
+            <p id="modal-body" class="text-text-secondary mb-6"></p>
+            <div class="flex justify-end space-x-4">
+                <button id="modal-cancel-btn" class="btn-primary bg-gray-400 hover:bg-gray-500 hidden">Cancelar</button>
+                <button id="modal-confirm-btn" class="btn-primary hidden">Confirmar</button>
+                <button id="modal-ok-btn" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados de exemplo para os carrinhos
+        const cartData = {
+            'Carrinho 001': {
+                sector: 'UTI',
+                status: 'expiring',
+                items: [
+                    { name: 'Soro Fisiológico 0.9%', standardQuantity: 10, currentQuantity: 10, validity: '2025-09-15' }, // A vencer
+                    { name: 'Adrenalina', standardQuantity: 5, currentQuantity: 5, validity: '2026-10-15' },
+                    { name: 'Luvas Estéreis', standardQuantity: 20, currentQuantity: 20, validity: '2026-09-01' }
+                ],
+                reports: [
+                    { date: '2025-07-10 14:00', hash: 'a1b2c3d4e5f6', content: 'Relatório de 10/07/2025 para Carrinho 001. Status: OK.' },
+                    { date: '2025-07-15 09:00', hash: 'f6e5d4c3b2a1', content: 'Relatório de 15/07/2025 para Carrinho 001. Status: Atropina vencida.' }
+                ]
+            },
+            'Carrinho 004': {
+                sector: 'Pediatria',
+                status: 'missing',
+                items: [
+                    { name: 'Dipirona', standardQuantity: 10, currentQuantity: 9, validity: '2026-08-15' }, // Faltando
+                    { name: 'Paracetamol', standardQuantity: 10, currentQuantity: 10, validity: '2026-01-01' },
+                    { name: 'Seringas 3ml', standardQuantity: 30, currentQuantity: 30, validity: '2027-03-20' }
+                ],
+                reports: []
+            },
+            'Carrinho 005': {
+                sector: 'Pronto Socorro',
+                status: 'missing',
+                items: [
+                    { name: 'Luvas Estéreis', standardQuantity: 20, currentQuantity: 19, validity: '2026-09-01' }, // Faltando
+                    { name: 'Fentanil', standardQuantity: 5, currentQuantity: 5, validity: '2026-08-20' }
+                ],
+                reports: []
+            },
+            'Carrinho 006': {
+                sector: 'Centro Cirúrgico',
+                status: 'conformity',
+                items: [
+                    { name: 'Bisturi', standardQuantity: 5, currentQuantity: 5, validity: '2027-01-01' },
+                    { name: 'Gaze Estéril', standardQuantity: 50, currentQuantity: 50, validity: '2026-06-30' }
+                ],
+                reports: []
+            },
+            'Carrinho 007': {
+                sector: 'Observação',
+                status: 'conformity',
+                items: [
+                    { name: 'Termômetro', standardQuantity: 3, currentQuantity: 3, validity: '2028-01-01' },
+                    { name: 'Bandagem Elástica', standardQuantity: 10, currentQuantity: 10, validity: '2026-04-01' }
+                ],
+                reports: []
+            },
+            'Carrinho 008': {
+                sector: 'Internação A',
+                status: 'expired',
+                items: [
+                    { name: 'Morfina', standardQuantity: 5, currentQuantity: 5, validity: '2024-01-01' }, // Vencido
+                    { name: 'Seringas 5ml', standardQuantity: 20, currentQuantity: 20, validity: '2027-02-01' }
+                ],
+                reports: []
+            },
+            'Carrinho 009': {
+                sector: 'Internação B',
+                status: 'expiring',
+                items: [
+                    { name: 'Cefalosporina', standardQuantity: 7, currentQuantity: 7, validity: '2025-09-01' }, // A vencer
+                    { name: 'Cateter Venoso', standardQuantity: 15, currentQuantity: 15, validity: '2026-03-01' }
+                ],
+                reports: []
+            },
+            'Carrinho 010': {
+                sector: 'UTI Neonatal',
+                status: 'expiring',
+                items: [
+                    { name: 'Vitamina K', standardQuantity: 3, currentQuantity: 3, validity: '2025-08-25' }, // A vencer
+                    { name: 'Fraldas RN', standardQuantity: 100, currentQuantity: 100, validity: '2026-12-31' }
+                ],
+                reports: []
+            },
+            'Carrinho 011': { // Novo carrinho em conformidade
+                sector: 'Maternidade',
+                status: 'conformity',
+                items: [
+                    { name: 'Oxitocina', standardQuantity: 5, currentQuantity: 5, validity: '2026-07-01' },
+                    { name: 'Luvas de Procedimento', standardQuantity: 50, currentQuantity: 50, validity: '2026-11-01' }
+                ],
+                reports: []
+            },
+            'Carrinho 012': { // Novo carrinho em conformidade
+                sector: 'Laboratório',
+                status: 'conformity',
+                items: [
+                    { name: 'Tubos de Coleta', standardQuantity: 100, currentQuantity: 100, validity: '2027-01-01' },
+                    { name: 'Álcool 70%', standardQuantity: 10, currentQuantity: 10, validity: '2026-05-01' }
+                ],
+                reports: []
+            }
+        };
+
+        // Dados para os alertas críticos (centralizados)
+        const criticalAlertsData = [
+            { type: 'missing', cartId: 'Carrinho 004', item: 'Dipirona', message: 'Dipirona Faltando' },
+            { type: 'expired', cartId: 'Carrinho 008', item: 'Morfina', message: 'Morfina Vencida' },
+            { type: 'expiring', cartId: 'Carrinho 001', item: 'Soro Fisiológico', message: 'Soro Fisiológico a Vencer (15/09)' }
+        ];
+
+        let currentCartId = ''; // Variável para armazenar o ID do carrinho atualmente visualizado
+
+        // Função para exibir o modal de mensagem
+        function showModal(title, message, type = 'alert', onConfirm = null) {
+            const modal = document.getElementById('message-modal');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = message;
+            const okBtn = document.getElementById('modal-ok-btn');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+
+            okBtn.classList.add('hidden');
+            confirmBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+
+            if (type === 'confirm') {
+                confirmBtn.classList.remove('hidden');
+                cancelBtn.classList.remove('hidden');
+                confirmBtn.onclick = () => {
+                    if (onConfirm) onConfirm(true);
+                    closeModal();
+                };
+                cancelBtn.onclick = () => {
+                    if (onConfirm) onConfirm(false);
+                    closeModal();
+                };
+            } else {
+                okBtn.classList.remove('hidden');
+                okBtn.onclick = closeModal;
+            }
+            modal.style.display = 'flex'; // Exibe o modal
+        }
+
+        // Função para fechar o modal
+        function closeModal() {
+            document.getElementById('message-modal').style.display = 'none';
+        }
+
+        // Simulação de login
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita o recarregamento da página
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            showModal('Bem-vindo, José!', 'Login realizado com sucesso. Você está no Dashboard do SmartCart.', 'alert');
+            renderAlerts('dashboard-alerts-content', criticalAlertsData); // Renderiza alertas no dashboard
+        });
+
+        // Função para mostrar uma página e esconder as outras
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        // Funções para abrir e fechar a barra lateral
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main-content-area").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main-content-area").style.marginLeft= "0";
+        }
+
+        // Navegação da barra de tarefas
+        document.getElementById('profile-settings-btn-icon').addEventListener('click', () => showPage('profile-settings-page'));
+        document.getElementById('alerts-btn-icon').addEventListener('click', () => {
+            renderAlerts('alerts-page-content', criticalAlertsData); // Popula a página de alertas
+            showPage('alerts-page');
+        });
+        document.getElementById('sidebar-dashboard-btn').addEventListener('click', () => showDashboard());
+        document.getElementById('sidebar-standard-form-btn').addEventListener('click', () => showPage('standard-form-page'));
+        document.getElementById('sidebar-cart-status-btn').addEventListener('click', () => {
+            renderGeneralCartStatus(); // Renderiza a lista de status geral dos carrinhos
+            showPage('cart-status-page');
+        });
+        document.getElementById('sidebar-logout-btn').addEventListener('click', () => showLogoutConfirmation());
+
+        // Função para mostrar a confirmação de logout
+        function showLogoutConfirmation() {
+            showModal('Sair da Aplicação', 'Você tem certeza que deseja sair?', 'confirm', (confirmed) => {
+                if (confirmed) {
+                    document.getElementById('main-app').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            });
+        }
+
+        // Função para exibir detalhes do carrinho com base no tipo (dashboard)
+        function showCartDetails(type) {
+            const titleElement = document.getElementById('cart-details-title');
+            const contentElement = document.getElementById('cart-details-content');
+            let detailsHtml = '';
+
+            switch (type) {
+                case 'conformity':
+                    titleElement.innerText = 'Carrinhos em Conformidade';
+                    detailsHtml = `<p class="mb-4">Estes são os carrinhos que estão 100% em conformidade com o inventário esperado:</p><ul class="list-disc pl-5 space-y-2">`;
+                    for (const cartId in cartData) {
+                        if (cartData[cartId].status === 'conformity') {
+                            detailsHtml += `<li><a href="#" class="text-success hover:underline" onclick="showIndividualCartDetails('${cartId}')"><strong>${cartId}</strong> - Setor: ${cartData[cartId].sector}</a></li>`;
+                        }
+                    }
+                    detailsHtml += `</ul>`;
+                    break;
+                case 'missing':
+                    titleElement.innerText = 'Carrinhos com Itens Faltando';
+                    detailsHtml = `<p class="mb-4">Estes carrinhos possuem itens que deveriam estar presentes, mas não foram detectados:</p><ul class="list-disc pl-5 space-y-2">`;
+                    for (const cartId in cartData) {
+                        if (cartData[cartId].status === 'missing') {
+                            detailsHtml += `<li><a href="#" class="text-danger hover:underline" onclick="showIndividualCartDetails('${cartId}')"><strong>${cartId}</strong> - Setor: ${cartData[cartId].sector}</a></li>`;
+                        }
+                    }
+                    detailsHtml += `</ul>`;
+                    break;
+                case 'expired':
+                    titleElement.innerText = 'Carrinhos com Itens Vencidos';
+                    detailsHtml = `<p class="mb-4">Estes carrinhos contêm itens cuja data de validade já expirou:</p><ul class="list-disc pl-5 space-y-2">`;
+                    for (const cartId in cartData) {
+                        if (cartData[cartId].status === 'expired') {
+                            detailsHtml += `<li><a href="#" class="text-danger hover:underline" onclick="showIndividualCartDetails('${cartId}')"><strong>${cartId}</strong> - Setor: ${cartData[cartId].sector}</a></li>`;
+                        }
+                    }
+                    detailsHtml += `</ul>`;
+                    break;
+                case 'expiring':
+                    titleElement.innerText = 'Carrinhos com Itens a Vencer';
+                    detailsHtml = `<p class="mb-4">Estes carrinhos possuem itens que estão próximos da data de validade (próximos 30 dias):</p><ul class="list-disc pl-5 space-y-2">`;
+                    for (const cartId in cartData) {
+                        if (cartData[cartId].status === 'expiring') {
+                            detailsHtml += `<li><a href="#" class="text-warning hover:underline" onclick="showIndividualCartDetails('${cartId}')"><strong>${cartId}</strong> - Setor: ${cartData[cartId].sector}</a></li>`;
+                        }
+                    }
+                    detailsHtml += `</ul>`;
+                    break;
+                default:
+                    titleElement.innerText = 'Detalhes do Carrinho';
+                    detailsHtml = '<p>Selecione uma categoria no dashboard para ver os detalhes.</p>';
+            }
+            contentElement.innerHTML = detailsHtml;
+            showPage('cart-details-page');
+        }
+
+        // Função para exibir detalhes de um carrinho individual
+        function showIndividualCartDetails(cartId) {
+            currentCartId = cartId; // Armazena o ID do carrinho atual
+            const titleElement = document.getElementById('individual-cart-title');
+            const contentElement = document.getElementById('individual-cart-content');
+            const cart = cartData[cartId];
+            let detailsHtml = '';
+
+            if (cart) {
+                titleElement.innerText = `Detalhes do ${cartId} - ${cart.sector}`;
+                detailsHtml += `<p class="mb-4">Lista de itens e seus status de quantidade e validade:</p>`;
+                detailsHtml += `<ul class="space-y-3">`;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Para comparar apenas a data
+
+                cart.items.forEach(item => {
+                    // Lógica para cor da quantidade
+                    let quantityColorClass = '';
+                    if (item.currentQuantity < item.standardQuantity) {
+                        quantityColorClass = 'text-danger'; // Quantidade menor que o padrão
+                    } else {
+                        quantityColorClass = 'text-success'; // Quantidade conforme
+                    }
+
+                    // Lógica para cor da validade
+                    let validityColorClass = '';
+                    const validityDate = new Date(item.validity);
+                    validityDate.setHours(0, 0, 0, 0); // Para comparar apenas a data
+
+                    const threeMonthsFromNow = new Date();
+                    threeMonthsFromNow.setMonth(today.getMonth() + 3);
+                    threeMonthsFromNow.setHours(0, 0, 0, 0);
+
+                    if (validityDate < today) {
+                        validityColorClass = 'text-danger'; // Vencido
+                    } else if (validityDate < threeMonthsFromNow) {
+                        validityColorClass = 'text-warning'; // A menos de 3 meses
+                    } else {
+                        validityColorClass = 'text-success'; // Mais de 3 meses
+                    }
+
+                    detailsHtml += `
+                        <li class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-200">
+                            <span class="font-medium text-text-primary w-full md:w-1/2">${item.name}</span>
+                            <div class="flex flex-col md:flex-row md:items-center md:space-x-4 w-full md:w-1/2 mt-2 md:mt-0">
+                                <span class="${quantityColorClass} font-semibold w-full md:w-1/2">
+                                    Qtd: ${item.currentQuantity} / ${item.standardQuantity}
+                                </span>
+                                <span class="${validityColorClass} font-semibold w-full md:w-1/2">
+                                    Validade: ${new Date(item.validity).toLocaleDateString('pt-BR')}
+                                </span>
+                            </div>
+                        </li>
+                    `;
+                });
+                detailsHtml += `</ul>`;
+            } else {
+                titleElement.innerText = 'Carrinho Não Encontrado';
+                detailsHtml = '<p>Os detalhes para este carrinho não foram encontrados.</p>';
+            }
+
+            contentElement.innerHTML = detailsHtml;
+            renderReportsList(cartId); // Renderiza a lista de relatórios
+            showPage('cart-individual-page');
+        }
+
+        // Função para renderizar a lista de relatórios
+        function renderReportsList(cartId) {
+            const reportsListElement = document.getElementById('reports-list');
+            const cart = cartData[cartId];
+            let reportsHtml = '';
+
+            if (cart && cart.reports.length > 0) {
+                cart.reports.forEach((report, index) => {
+                    reportsHtml += `
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center p-3 rounded-md border border-gray-200 bg-gray-50">
+                            <div class="flex-1 mb-2 md:mb-0">
+                                <p class="text-text-primary font-medium">Data/Hora: ${report.date}</p>
+                                <p class="text-text-secondary text-sm">Hash: ${report.hash}</p>
+                            </div>
+                            <button class="btn-primary px-4 py-2 text-sm" onclick="viewReport('${cartId}', ${index})">Visualizar Documento</button>
+                        </div>
+                    `;
+                });
+            } else {
+                reportsHtml = '<p class="text-text-secondary">Nenhum relatório gerado para este carrinho ainda.</p>';
+            }
+            reportsListElement.innerHTML = reportsHtml;
+        }
+
+        // Função para renderizar a lista de status geral dos carrinhos
+        function renderGeneralCartStatus() {
+            const listElement = document.getElementById('general-cart-status-list');
+            let listHtml = '';
+            for (const cartId in cartData) {
+                const cart = cartData[cartId];
+                let statusClass = '';
+                let statusText = '';
+                if (cart.status === 'conformity') {
+                    statusClass = 'text-success';
+                    statusText = 'Em Conformidade';
+                } else if (cart.status === 'missing') {
+                    statusClass = 'text-danger';
+                    statusText = 'Itens Faltando';
+                } else if (cart.status === 'expired') {
+                    statusClass = 'text-danger';
+                    statusText = 'Itens Vencidos';
+                } else if (cart.status === 'expiring') {
+                    statusClass = 'text-warning';
+                    statusText = 'Itens a Vencer';
+                }
+
+                listHtml += `
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200" onclick="showIndividualCartDetails('${cartId}')">
+                        <span class="font-medium text-text-primary">${cartId} - ${cart.sector}</span>
+                        <span class="${statusClass} font-semibold">${statusText}</span>
+                    </li>
+                `;
+            }
+            listElement.innerHTML = listHtml;
+        }
+
+        // Função para renderizar alertas em um contêiner específico
+        function renderAlerts(containerId, alertsData) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            let alertsHtml = `<ul class="space-y-3 text-text-secondary">`;
+            if (alertsData.length > 0) {
+                alertsData.forEach(alert => {
+                    let iconClass = '';
+                    let bgColorClass = '';
+                    let borderColorClass = '';
+                    if (alert.type === 'missing') {
+                        iconClass = 'fas fa-times-circle text-danger';
+                        bgColorClass = 'bg-red-50';
+                        borderColorClass = 'border-red-200';
+                    } else if (alert.type === 'expired') {
+                        iconClass = 'fas fa-calendar-times text-danger';
+                        bgColorClass = 'bg-red-50';
+                        borderColorClass = 'border-red-200';
+                    } else if (alert.type === 'expiring') {
+                        iconClass = 'fas fa-hourglass-half text-warning';
+                        bgColorClass = 'bg-yellow-50';
+                        borderColorClass = 'border-yellow-200';
+                    }
+
+                    alertsHtml += `
+                        <li class="flex justify-between items-center ${bgColorClass} p-3 rounded-md border ${borderColorClass}">
+                            <span class="flex items-center">
+                                <i class="${iconClass} mr-2"></i>
+                                <strong class="text-text-primary">${alert.cartId}:</strong> ${alert.message}
+                            </span>
+                            <button class="text-primary-custom hover:underline text-sm" onclick="showIndividualCartDetails('${alert.cartId}')">Ver Detalhes</button>
+                        </li>
+                    `;
+                });
+            } else {
+                alertsHtml = '<p class="text-text-secondary">Nenhum alerta crítico no momento.</p>';
+            }
+            alertsHtml += `</ul>`;
+            container.innerHTML = alertsHtml;
+        }
+
+
+        // Função para gerar um novo relatório (simulado)
+        document.getElementById('generate-report-btn').addEventListener('click', () => {
+            if (currentCartId) {
+                const now = new Date();
+                const dateTime = now.toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                const newHash = Math.random().toString(36).substring(2, 10); // Hash simples
+                const reportContent = `Relatório gerado em ${dateTime} para ${currentCartId}. \n\nStatus atual dos itens: \n${cartData[currentCartId].items.map(item => `${item.name}: ${item.currentQuantity}/${item.standardQuantity} (Val: ${new Date(item.validity).toLocaleDateString('pt-BR')})`).join('\n')}`;
+
+                const newReport = {
+                    date: dateTime,
+                    hash: newHash,
+                    content: reportContent
+                };
+
+                cartData[currentCartId].reports.push(newReport);
+                renderReportsList(currentCartId); // Atualiza a lista de relatórios
+                showModal('Relatório Gerado!', `Um novo relatório foi gerado para ${currentCartId}.`, 'alert');
+            } else {
+                showModal('Erro', 'Nenhum carrinho selecionado para gerar relatório.', 'alert');
+            }
+        });
+
+        // Função para visualizar um relatório
+        function viewReport(cartId, reportIndex) {
+            const report = cartData[cartId].reports[reportIndex];
+            if (report) {
+                showModal(`Relatório - ${cartId} (${report.date})`, report.content, 'alert');
+            } else {
+                showModal('Erro', 'Relatório não encontrado.', 'alert');
+            }
+        }
+
+        // Função para voltar ao dashboard
+        function showDashboard() {
+            renderAlerts('dashboard-alerts-content', criticalAlertsData); // Garante que os alertas sejam renderizados no dashboard
+            showPage('dashboard-page');
+        }
+
+        // Lógica para adicionar itens ao formulário padrão
+        document.getElementById('item-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const itemName = document.getElementById('item-name').value;
+            const itemQuantity = document.getElementById('item-quantity').value;
+
+            if (itemName && itemQuantity) {
+                const itemList = document.getElementById('included-items-list').querySelector('ul');
+                const newItem = document.createElement('li');
+                newItem.textContent = `${itemName} - Quantidade: ${itemQuantity}`;
+                itemList.appendChild(newItem);
+
+                // Limpa o formulário
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-quantity').value = '';
+                showModal('Item Adicionado', `"${itemName}" com quantidade "${itemQuantity}" foi adicionado à lista.`, 'alert');
+            } else {
+                showModal('Erro', 'Por favor, preencha o nome e a quantidade do item.', 'alert');
+            }
+        });
+
+
+        // Inicializa a página no dashboard após o login (simulado)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicialmente, apenas a tela de login é visível
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        });
+
+    </script>
+</body>
+</html>
