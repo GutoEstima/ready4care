@@ -1,0 +1,166 @@
+ /* Estilos personalizados para o SmartCart */
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif; /* Nova fonte primária', 'Inter', sans-serif; /*
+            background-color: #F2F2F2; /* Nova cor de fundo */
+            color: #1F2937; /* Nova cor de texto primária */
+            background-color: #DBEAFE; /* Nova cor de fundo */
+        }
+        .header-bg {
+            background-color: #1F2937; /* Nova cor primária */
+        }
+        .sidebar-bg {
+            background-color: #ffffff; /* Fundo branco para a barra lateral */
+        }
+        .card {
+            background-color: #e5eefb;
+            border-radius: 0.75rem; /* Cantos arredondados */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+         .card-login {
+            background-color: #0F304F;
+            border-radius: 0.75rem; /* Cantos arredondados */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #28B180; /* Nova cor primária */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #28B180; /* Tom mais escuro da nova cor primária para hover */
+        }
+        .text-primary-custom { /* Usado onde a cor primária é para texto */
+            color: #28B180; /* Nova cor primária */
+        }
+        .text-success {
+            color: #2ECC71; /* Cor para conformidade */
+        }
+        .text-warning {
+            color: #eed202; /* Nova cor para itens a vencer (vermelho) */
+        }
+        .text-danger {
+            color: #E74C3C; /* Nova cor para itens faltando/vencidos (vermelho) */
+        }
+        /* Estilos para o formulário modal */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; /* Posição fixa na tela */
+            z-index: 1000; /* Acima de outros elementos */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Habilita scroll se o conteúdo for muito grande */
+            background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 80%; /* Largura do modal */
+            max-width: 600px; /* Largura máxima */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            color: #4B5563; /* Nova cor de texto secundária */
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #1F2937; /* Nova cor de texto primária */
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Estilos para a barra lateral colapsável */
+        .sidebar {
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #1F2937; /* Mantido escuro para contraste */
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #4B5563; /* Nova cor de texto secundária */
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1; /* Mantido para bom contraste com o fundo escuro */
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #28B180; /* Nova cor primária */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .openbtn:hover {
+            background-color: #28B180; /* Tom mais escuro da nova cor primária para hover */
+        }
+
+        #main-content-area {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0; /* Começa sem margem */
+        }
+
+        /* Responsividade para a barra lateral */
+        @media screen and (max-height: 450px) {
+            .sidebar {padding-top: 15px;}
+            .sidebar a {font-size: 18px;}
+        }
+
+        /* Estilos específicos para o texto do card de login */
+        #login-card p {
+            color: #F2F2F2; /* Exemplo: muda a cor do parágrafo para a cor primária */
+        }
+
+        #login-card input {
+            color: #3C3F41; /* Exemplo: muda a cor do texto dos inputs para a cor secundária */
+        }
+
+        /* Novas regras para os ícones de sino e pessoa */
+        #alerts-btn-icon,
+        #profile-settings-btn-icon {
+            color: #28B180; /* Cor do texto primária para os ícones */
+        }
+
+        #alerts-btn-icon:hover,
+        #profile-settings-btn-icon:hover {
+            color: #4B5563; /* Cor do texto secundária para o hover */
+        }
